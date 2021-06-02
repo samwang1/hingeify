@@ -13,7 +13,7 @@ match_pct <- round(nrow(matches) / nrow(df) * 100, 2)
 
 
 
-                            ### OUTGOING LIKES ###
+### OUTGOING LIKES ###
 
 outgoing_likes <- nrow(likes)
 
@@ -23,18 +23,20 @@ outgoing_nomatch_pct <- round(outgoing_nomatch / outgoing_likes * 100, 2)
 
 # outgoing matches--you liked them first, they liked you back
 outgoing_matches <- nrow(likes %>% filter(match != "NULL"))
-  # alternate: outgoing_matches <- outgoing_likes - outgoing_unrequited
+# alternate: outgoing_matches <- outgoing_likes - outgoing_unrequited
 outgoing_matches_pct <- round(outgoing_matches / outgoing_likes * 100, 2)
-  # alternate: outgoing_matches_pct <- 1 - outgoing_unrequited_pct
+# alternate: outgoing_matches_pct <- 1 - outgoing_unrequited_pct
+
+outgoing_likes_pct <- round(outgoing_likes / nrow(df) * 100, 2)
 
 
-
-                            ### INCOMING LIKES ###
+### INCOMING LIKES ###
 
 # incoming matches--they liked you first, you liked them back
-incoming_matches <- nrow(matches %>% filter(like == "NULL" & block == "NULL"))
+incoming_matches <- nrow(matches %>% filter(like == "NULL"))
 # incoming likes, removed--they liked you, you didn't like them back
-incoming_removed <- nrow(removed %>% filter(like == "NULL"))
+incoming_removed <- nrow(removed %>% filter(like == "NULL" & match == "NULL"
+                                            & chats == "NULL"))
 # total # of incoming likes
 incoming_total <- incoming_matches + incoming_removed
 
@@ -43,11 +45,12 @@ incoming_matches_pct <- round(incoming_matches / incoming_total * 100, 2)
 
 #removed_pct
 incoming_removed_pct <- round(incoming_removed / incoming_total * 100, 2)
-  # alt: incoming_removed_pct <- 1 - incoming_matches_pct
+# alt: incoming_removed_pct <- 1 - incoming_matches_pct
+
+incoming_likes_pct <- round(incoming_total / nrow(df) * 100, 2)
 
 
-
-                            ### MATCHES ###
+### MATCHES ###
 match_total <- nrow(matches)
 
 # match but no messaging
@@ -57,6 +60,10 @@ match_nochat_pct <- round(match_nochat / match_total * 100, 2)
 # match with messaging
 match_chat <- match_total - match_nochat
 match_chat_pct <- 100 - match_nochat_pct
+
+# match percentages
+match_outgoing_pct <- round(outgoing_matches / match_total * 100, 2)
+match_incoming_pct <- round(incoming_matches / match_total * 100, 2)
 
 
 
@@ -238,6 +245,47 @@ fig3 <- fig3 %>% layout(xaxis = x3, yaxis = y3, font = font,
                         title =  "The Numbers")
 
 fig3
+
+
+
+#-----------------------------------------------------------------------------#
+#-----------------------------------------------------------------------------#
+#-----------------------------------------------------------------------------#
+
+
+
+match_times <- unlist(matches$match)
+match_times <- match_times[c(TRUE, FALSE)]
+match_times <- as.data.frame(match_times)
+
+dates <- as.Date(sapply(match_times, substring, 1, 10))
+dates <- sort(dates)
+
+freq <- as.data.frame(table(dates))
+freq <- freq %>% 
+  mutate(sum = cumsum(Freq))
+
+fig4 <- plot_ly(freq,
+                x = ~dates, y = ~Freq, type = "bar",
+                text = paste("Date:", freq$dates,
+                             "<br>Matches that Day:", freq$Freq),
+                marker = list(color = "violet"))
+x4 <- list(
+  title = "Time",
+  #showticklabels = FALSE,
+  showgrid = FALSE,
+  type = "date",
+  tickformat = "%B <br>%Y",
+  range = c(format(input$date_range[1]), format(input$date_range[2]))
+)
+y4 <- list(
+  title = "Matches on a Day"
+)
+fig4 <- fig4 %>%
+  layout(xaxis = x4, yaxis = y4,
+         title = "Total Matches Per Day")#,
+         #plot_bgcolor = "transparent", paper_bgcolor = "transparent")
+fig4
 
 
 #                             ### WE MET ###

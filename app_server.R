@@ -10,6 +10,26 @@ server <- function(input, output) {
     
     return(df)
   })
+  
+  output$sample_overview <- renderImage({
+    img <- normalizePath(file.path("./www", "sample_overview.png"))
+    list(src = img, alt = "Sample Overview")
+  }, deleteFile = FALSE)
+  
+  output$sample_data1 <- renderImage({
+    img <- normalizePath(file.path("./www", "sample_data1.png"))
+    list(src = img, alt = "Sample Data 1")
+  }, deleteFile = FALSE)
+  
+  output$sample_data2 <- renderImage({
+    img <- normalizePath(file.path("./www", "sample_data2.png"))
+    list(src = img, alt = "Sample Data 2")
+  }, deleteFile = FALSE)
+  
+  output$sample_data3 <- renderImage({
+    img <- normalizePath(file.path("./www", "sample_data3.png"))
+    list(src = img, alt = "Sample Data 3")
+  }, deleteFile = FALSE)
 
   output$placeholder_1 <- renderText({
     if (is.null(input$matchesJSON)) {
@@ -24,6 +44,12 @@ server <- function(input, output) {
         (matches.json)!</i>")
     }
   })
+  
+  font <- list(
+    # family = "Courier New",
+    # size = 18,
+    color = "white"
+  )
   
   output$text_analysis <- renderText({
     file <- input$matchesJSON
@@ -54,6 +80,8 @@ server <- function(input, output) {
     outgoing_matches_pct <- round(outgoing_matches / outgoing_likes * 100, 2)
     # alternate: outgoing_matches_pct <- 1 - outgoing_unrequited_pct
     
+    outgoing_likes_pct <- round(outgoing_likes / nrow(df) * 100, 2)
+    
     
     
     ### INCOMING LIKES ###
@@ -73,7 +101,7 @@ server <- function(input, output) {
     incoming_removed_pct <- round(incoming_removed / incoming_total * 100, 2)
     # alt: incoming_removed_pct <- 1 - incoming_matches_pct
     
-    
+    incoming_likes_pct <- round(incoming_total / nrow(df) * 100, 2)
     
     ### MATCHES ###
     match_total <- nrow(matches)
@@ -89,39 +117,68 @@ server <- function(input, output) {
     # match percentages
     match_outgoing_pct <- round(outgoing_matches / match_total * 100, 2)
     match_incoming_pct <- round(incoming_matches / match_total * 100, 2)
+
     
-    
-    
-    ### WE MET ###
-    # met_total <- df %>% filter(we_met != "NULL")
-    
-    
-    # message <- paste0("From the data you provided, you have had <b>", nrow(df),
-    # "</b> total interactions with other Hinge users. You sent out <b>", outgoing_likes,
-    # "</b> likes and received <b>", incoming_total,
-    # "</b> likes. In total, you matched with <b>", match_total, "</b> others: <b>",
-    # match_outgoing_pct, "%</b> occurred when you liked them first; <b>",
-    # match_incoming_pct, "% </b> occurred when they liked you first.")
-    
-    message <- paste0("<dl><dt>Total Interactions: <b>", nrow(df), "</b></dt>",
-                      "<dt>Total Likes Sent: <b>", outgoing_likes, "</b></dt>",
-                      "<dd>- Of these, <b>", outgoing_matches_pct,
-                      "% (", outgoing_matches, ")</b> were reciprocated by them,
-                      resulting in a match.</dd>",
-                      "<dt> Total Likes Received: <b>", incoming_total, "</b></dt>",
-                      "<dd>- Of these, <b>", incoming_matches_pct,
-                      "%  (", incoming_matches, ")</b> were reciprocated by you,
-                      resulting in a match.</dd></dl>",
-                      "<br>",
-                      "<dl><dt>Total Matches: <b>", match_total, "</b></dt>",
-                      "<dd>- <b>", match_outgoing_pct, "%</b> occurred when you
-                      liked them first.</dt>",
-                      "<dd>- <b>", match_incoming_pct,"%</b> occurred when they
-                      liked you first.</dt>",
-                      "<dd>- You chatted with <b>", match_chat_pct, "% (",
-                      match_chat, ") </b> of your matches.</dd>",
-                      "<dd>- You didn't chat with <b>", match_nochat_pct, "% (",
-                      match_nochat, ") </b> of your matches.</dd></dl>")
+    message <- paste0(
+      "<dl><dt><font size = \"6px\">Total Interactions: </font>
+      <font size = \"6px\", font color = \"#B048B5\"><b>", nrow(df),
+      "</b></font></dt>",
+      
+      "<br>",
+      
+      # Outgoing Likes
+      "<dt><font size = \"6px\">Total Likes Sent: </font>
+      <font size = \"6px\"><b>", outgoing_likes, "</b></font></dt>",
+      
+      "<dd><font size = \"4px\">- <b>", outgoing_likes_pct, "%</b> of your
+      total interactions.",
+      
+      "<dd><font size = \"4px\">- Of these, <b>", outgoing_matches_pct,
+      "% (", outgoing_matches, ")</b> were reciprocated by them,
+      resulting in a match.</font></dd>",
+      
+      "<dd><font size = \"4px\">- The other <b>", outgoing_nomatch_pct,
+      "% (", outgoing_nomatch, ")</b> likes you sent out were not
+      reciprocated and didn't result in a match.</font></dd>",
+      
+      "<br>",
+      
+      # Incoming Likes
+      "<dt><font size = \"6px\">Total Likes Received: </font>
+      <font size = \"6px\"><b>", incoming_total, "</b></font></dt>",
+      
+      "<dd><font size = \"4px\">- <b>", incoming_likes_pct, "%</b> of your
+      total interactions.</dd>",
+      
+      "<dd><font size = \"4px\">- Of these, <b>", incoming_matches_pct,
+      "%  (", incoming_matches, ")</b> were reciprocated by you,
+      resulting in a match.</font></dd>",
+      
+      "<dd><font size = \"4px\">- You didn't like <b>", incoming_removed_pct,
+      "% (", incoming_removed, ")</b> of them so you removed them.</dd>",
+
+      "<br>",
+      
+      # Matches
+      "<dt><font size = \"6px\">Total Matches: <b>", match_total,
+      "</b></font></dt>",
+      
+      # "<dd><font size = \"4px\">- <b>", match_pct, "%</b> of your
+      # total interactions.</dd>",
+      
+      "<dd><font size = \"4px\">- <b>", match_outgoing_pct,
+      "% (", outgoing_matches, ") </b> occurred when you liked them first.
+      </font></dd>",
+      
+      "<dd><font size = \"4px\">- <b>", match_incoming_pct,
+      "% (", incoming_matches, ") </b> occurred when they liked you first.
+      </font></dd>",
+      
+      "<dd><font size = \"4px\">- You chatted with <b>", match_chat_pct,
+      "% (", match_chat, ") </b> of your matches.</font></dd>",
+      
+      "<dd><font size = \"4px\">- You didn't chat with <b>", match_nochat_pct,
+      "% (", match_nochat, ") </b> of your matches.</font></dd></dl>")
     
     message
   })
@@ -162,16 +219,13 @@ server <- function(input, output) {
       #showticklabels = FALSE,
       showgrid = FALSE,
       type = "date",
-      tickformat = "%B <br>%Y"
+      tickformat = "%B <br>%Y",
+      range = c(format(input$date_range1[1]), format(input$date_range1[2]))
     )
     y1 <- list(
       title = "Total Matches"
     )
-    font <- list(
-      # family = "Courier New",
-      # size = 18,
-      color = "white"
-    )
+    
     fig1 <- fig1 %>%
       layout(xaxis = x1, yaxis = y1, font = font,
         title = "Total Matches Over Time",
@@ -248,12 +302,7 @@ server <- function(input, output) {
       title = "Frequency",
       rangemode = "tozero"
     )
-    
-    font <- list(
-      # family = "Courier New",
-      # size = 18,
-      color = "white"
-    )
+  
     
     fig2 <- fig2 %>%
       add_trace(y = ~match_freq, name = "Match Frequency", mode = "lines",
@@ -264,7 +313,7 @@ server <- function(input, output) {
     
     fig2 <- fig2 %>%
       layout(xaxis = x2, yaxis = y2, title =
-               "Likes & Matches Throughout the Day (based on Hinge server times)",
+               "Likes & Matches Throughout the Day",
              font = font, spikedistance = -1, showlegend = TRUE, hovermode = "x",
              plot_bgcolor = "transparent", paper_bgcolor = "transparent")
     
@@ -304,14 +353,9 @@ server <- function(input, output) {
       hoverinfo = "skip"
     )
     
-    font <- list(
-      # family = "Courier New",
-      # size = 18,
-      color = "white"
-    )
-    
     x3 <- list(
-      title = ""
+      title = "",
+      range = c(format(input$date_range[1]), format(input$date_range[2]))
     )
     
     y3 <- list(
@@ -335,4 +379,58 @@ server <- function(input, output) {
     url <- a("LinkedIn", href = "https://www.linkedin.com/in/samw1/")
     tagList("My ", url)
   })
+  
+  # v <- reactiveValues(data = NULL)
+  # observeEvent(input$date_range4, {
+  #   v$data <- list(input$date_range4[1], input$date_range4[2])
+  # })
+  # observeEvent(input$reset4, {
+  #   v$data <- NULL
+  # })
+  
+  output$fig4 <- renderPlotly({
+    file <- input$matchesJSON
+    if (is.null(file)) return (NULL)
+    df <- data()
+    
+    matches <- df %>% filter(match != "NULL")
+    
+    match_times <- unlist(matches$match)
+    match_times <- match_times[c(TRUE, FALSE)]
+    match_times <- as.data.frame(match_times)
+    
+    dates <- as.Date(sapply(match_times, substring, 1, 10))
+    dates <- sort(dates)
+    
+    freq <- as.data.frame(table(dates))
+    freq <- freq %>% 
+      mutate(sum = cumsum(Freq))
+    
+    fig4 <- plot_ly(freq,
+                    x = ~dates, y = ~Freq, type = "bar",
+                    text = paste("Date:", freq$dates,
+                                 "<br>Matches that Day:", freq$Freq),
+                    marker = list(color = "violet"))
+    x4 <- list(
+      title = "Time",
+      #showticklabels = FALSE,
+      showgrid = FALSE,
+      type = "date",
+      tickformat = "%B <br>%Y",
+      range = c(format(input$date_range4[1]), format(input$date_range4[2]))
+    )
+    y4 <- list(
+      title = "Matches on a Day"
+    )
+    fig4 <- fig4 %>%
+      layout(xaxis = x4, yaxis = y4, font = font,
+             title = "Total Matches Per Day",
+    plot_bgcolor = "transparent", paper_bgcolor = "transparent")
+    fig4
+  })
+  
+  # observeEvent(input$reset4, {
+  #   input$date_range4[1] <- NULL
+  #   input$date_range4[2] <- NULL
+  # })
 }
